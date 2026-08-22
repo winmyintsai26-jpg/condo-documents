@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { access, readFile } from "node:fs/promises";
 import { createServer } from "node:http";
 import test from "node:test";
 import publicLibrary from "../netlify/functions/public-library";
@@ -20,6 +20,7 @@ test("Netlify routes functions before the SPA fallback", async () => {
   assert.match(config, /command = "npm run build"/);
   assert.match(config, /publish = "dist"/);
   assert.match(config, /functions = "netlify\/functions"/);
+  await assert.rejects(() => access("public/_redirects"));
 });
 
 test("public library requests published documents only", async () => {
