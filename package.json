@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@netlify/functions": "^6.0.0",
+    "@supabase/supabase-js": "^2.112.3",
     "bcryptjs": "^3.0.3",
     "jose": "^6.2.10",
     "lucide-react": "^1.33.0",

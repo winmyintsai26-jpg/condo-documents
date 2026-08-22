@@ -1,3 +1,3 @@
-export type DocumentCategory = "management" | "dedicatory" | "minutes" | "financial" | "notices";
-export interface CondoDocument { id: string; title: string; category: DocumentCategory; fileName: string; fileUrl: string; year: number; updatedAt: string; fileType: "PDF"; }
-export interface CategoryDefinition { id: DocumentCategory; title: string; shortTitle: string; description: string; }
+export interface CategoryDefinition { id: string; name: string; slug: string; short_name: string; description: string; position?: number; }
+export interface CondoDocument { id: string; title: string; categoryId: string; category: CategoryDefinition; fileName: string; fileUrl: string; year: number; updatedAt: string; fileType: "PDF"; fileSize: number; published: boolean; }
+export interface LibraryResponse { categories: CategoryDefinition[]; documents: CondoDocument[]; }

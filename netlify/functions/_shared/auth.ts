@@ -40,6 +40,12 @@ export async function isAuthenticated(request: Request) {
   } catch { return false; }
 }
 
+export async function requireAdminMutation(request: Request) {
+  if (!assertSameOrigin(request)) return json({ message: "Request could not be verified." }, 403);
+  if (!(await isAuthenticated(request))) return json({ message: "Authentication required." }, 401);
+  return null;
+}
+
 export function sessionCookie(token: string) {
   return `${SESSION_COOKIE}=${token}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${SESSION_SECONDS}${process.env.CONTEXT === "production" ? "; Secure" : ""}`;
 }
