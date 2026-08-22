@@ -30,7 +30,9 @@ Requires Node.js 20.19+ or 22.12+.
    npm run auth:hash
    ```
 
-   Paste only the generated bcrypt hash into `ADMIN_PASSWORD_HASH`.
+   Copy the complete generated `ADMIN_PASSWORD_HASH='...'` line into `.env`. The single quotes preserve every `$` character in the bcrypt hash. Do not add backslashes before `$`.
+
+   To verify the private local values without printing them, run `npm run auth:diagnose`. To test the exact values injected by Netlify Dev, run `npx netlify dev:exec npm run auth:diagnose -- --injected`.
 
 4. Generate a session secret, for example:
 

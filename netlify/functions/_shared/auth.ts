@@ -10,7 +10,11 @@ const dummyHash = "$2b$12$C6UzMDM.H6dfI/f/IKcEe.3cW5B8xj2PNJ5nJvS4eY8GQ5zQ0rZ4K"
 function required(name: "ADMIN_USERNAME" | "ADMIN_PASSWORD_HASH" | "SESSION_SECRET") {
   const value = process.env[name];
   if (!value) throw new Error(`Missing required server configuration: ${name}`);
-  return value;
+  return value.trim();
+}
+
+export function isValidBcryptHash(value: string) {
+  return /^\$2[aby]\$\d{2}\$[./A-Za-z0-9]{53}$/.test(value.trim());
 }
 
 function safeEqual(left: string, right: string) {
@@ -21,6 +25,7 @@ function safeEqual(left: string, right: string) {
 export async function verifyCredentials(username: string, password: string) {
   const expectedUsername = required("ADMIN_USERNAME");
   const passwordHash = required("ADMIN_PASSWORD_HASH");
+  if (!isValidBcryptHash(passwordHash)) throw new Error("ADMIN_PASSWORD_HASH is not a valid bcrypt hash");
   const usernameMatches = safeEqual(username, expectedUsername);
   const passwordMatches = await compare(password, usernameMatches ? passwordHash : dummyHash);
   return usernameMatches && passwordMatches;

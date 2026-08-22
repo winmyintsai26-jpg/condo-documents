@@ -11,7 +11,8 @@
     "preview": "vite preview",
     "typecheck": "tsc -b --pretty false",
     "test": "node --import tsx --test tests/**/*.test.ts",
-    "auth:hash": "node scripts/generate-password-hash.mjs"
+    "auth:hash": "node scripts/generate-password-hash.mjs",
+    "auth:diagnose": "node scripts/diagnose-auth.mjs"
   },
   "dependencies": {
     "@netlify/functions": "^6.0.0",

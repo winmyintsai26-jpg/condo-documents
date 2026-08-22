@@ -5,6 +5,7 @@ import login from "../netlify/functions/auth-login";
 import logout from "../netlify/functions/auth-logout";
 import session from "../netlify/functions/auth-session";
 import { resetRateLimitsForTests } from "../netlify/functions/_shared/rate-limit";
+import { isValidBcryptHash, verifyCredentials } from "../netlify/functions/_shared/auth";
 
 const origin = "http://localhost:8888";
 beforeEach(async () => {
@@ -43,4 +44,15 @@ test("cross-origin login is rejected", async () => {
   const request = loginRequest("correct-test-password");
   request.headers.set("origin", "https://attacker.example");
   assert.equal((await login(request)).status, 403);
+});
+
+test("generated bcryptjs hashes are accepted by the server verifier", async () => {
+  const generated = await hash("compatible-test-password", 4); process.env.ADMIN_PASSWORD_HASH = `  ${generated}  `;
+  assert.equal(isValidBcryptHash(generated), true); assert.equal(await verifyCredentials("test-admin", "compatible-test-password"), true);
+});
+
+test("malformed or escaped bcrypt hashes are rejected as configuration errors", async () => {
+  process.env.ADMIN_PASSWORD_HASH = String.raw`\$2b\$12\$invalid`;
+  assert.equal(isValidBcryptHash(process.env.ADMIN_PASSWORD_HASH), false);
+  await assert.rejects(() => verifyCredentials("test-admin", "correct-test-password"), /not a valid bcrypt hash/);
 });
