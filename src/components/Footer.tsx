@@ -1,0 +1,4 @@
+import { Link } from "react-router-dom";
+import { siteConfig } from "../config/site";
+import { PropertyMark } from "./PropertyMark";
+export function Footer() { return <footer className="site-footer"><div className="shell footer-main"><div className="footer-brand"><PropertyMark /><div><strong>{siteConfig.propertyName}</strong><span>Document Center</span></div></div><div className="footer-contact"><a href={`mailto:${siteConfig.contact.email}`}>{siteConfig.contact.email}</a><a href={`tel:${siteConfig.contact.phoneHref}`}>{siteConfig.contact.phone}</a></div><Link className="footer-admin" to="/admin">Admin portal</Link></div><div className="shell footer-bottom"><p>© {new Date().getFullYear()} {siteConfig.propertyName}</p><p>Official community documents are provided for informational and record-access purposes.</p></div></footer>; }
