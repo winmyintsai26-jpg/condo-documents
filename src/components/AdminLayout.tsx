@@ -1,4 +1,4 @@
-import { FileText, FolderOpen, LogOut, PanelLeft, X } from "lucide-react";
+import { FileText, FolderOpen, LayoutDashboard, LogOut, PanelLeft, X } from "lucide-react";
 import { useState } from "react";
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
@@ -29,6 +29,7 @@ export function AdminLayout() {
         <button type="button" onClick={() => setOpen(false)} aria-label="Close navigation"><X /></button>
       </div>
       <nav aria-label="Admin navigation">
+        <NavLink to="." end onClick={() => setOpen(false)}><LayoutDashboard size={19} aria-hidden="true" />Dashboard</NavLink>
         <NavLink to="documents" onClick={() => setOpen(false)}><FileText size={19} aria-hidden="true" />Documents</NavLink>
         <NavLink to="categories" onClick={() => setOpen(false)}><FolderOpen size={19} aria-hidden="true" />Categories</NavLink>
       </nav>

@@ -39,6 +39,13 @@ create trigger documents_set_updated_at before update on public.documents for ea
 alter table public.categories enable row level security;
 alter table public.documents enable row level security;
 
+-- Projects created with automatic API table exposure disabled do not always
+-- include these privileges. Netlify Functions use the service role and still
+-- enforce application authentication before every admin mutation.
+grant usage on schema public to service_role;
+grant select, insert, update, delete on table public.categories to service_role;
+grant select, insert, update, delete on table public.documents to service_role;
+
 insert into public.categories(name, slug, short_name, description, position) values
 ('Management Certificate','management','Management','Current recorded association and management information.',10),
 ('Dedicatory Instruments','dedicatory','Dedicatory','Governing documents, declarations, bylaws, and rules.',20),

@@ -1,62 +1,80 @@
 # Condo Documents
 
-A public condominium document portal with a secure single-administrator area. The public React application remains a client-side Vite SPA. Authentication runs only in Netlify Functions.
+A production-ready condominium document portal with a public library and a secure single-administrator area. The frontend is a React/Vite SPA. Authentication, document management, and Supabase access run only in Netlify Functions.
 
-## Authentication architecture
+## Requirements
 
-- One administrator; no registration, email identity, profiles, or roles.
-- `ADMIN_USERNAME` and a bcrypt password hash live only in server environment variables.
-- Login returns a signed, eight-hour session in an `HttpOnly`, `SameSite=Strict` cookie (`Secure` in production).
-- Login and logout require a same-origin request. `ALLOWED_ORIGINS` supports explicit production origins.
-- Failed logins are rate-limited per client address in each warm function instance.
-- React checks `/api/auth/session`; it never stores credentials, hashes, or tokens.
-- Future document-write functions should call the shared server-side session and origin guards in `netlify/functions/_shared/auth.ts`.
+- Node.js 20.19+ or 22.12+
+- A Supabase project
+- A Netlify account and Netlify CLI for full-stack local development
 
-## Local setup
+## 1. Clone and install
 
-Requires Node.js 20.19+ or 22.12+.
+```bash
+git clone https://github.com/winmyintsai26-jpg/condo-documents.git
+cd condo-documents
+npm install
+```
 
-1. Install dependencies:
+## 2. Create and configure Supabase
 
-   ```bash
-   npm install
-   ```
+Create a new Supabase project. In its SQL Editor, run:
 
-2. Copy `.env.example` to `.env` and replace every placeholder. Never commit `.env`.
+```text
+supabase/migrations/202608220001_document_management.sql
+```
 
-3. Generate the password hash without placing the plaintext password in shell history:
+The migration creates the tables, indexes, triggers, five starter categories, `documents` storage bucket, public PDF read policy, RLS configuration, and explicit `service_role` table privileges. See [docs/SUPABASE_SETUP.md](docs/SUPABASE_SETUP.md).
 
-   ```bash
-   npm run auth:hash
-   ```
+## 3. Configure the private local environment
 
-   Copy the complete generated `ADMIN_PASSWORD_HASH='...'` line into `.env`. The single quotes preserve every `$` character in the bcrypt hash. Do not add backslashes before `$`.
+Copy `.env.example` to `.env` and replace every placeholder. `.env` is ignored by Git.
 
-   To verify the private local values without printing them, run `npm run auth:diagnose`. To test the exact values injected by Netlify Dev, run `npx netlify dev:exec npm run auth:diagnose -- --injected`.
+Required variables:
 
-4. Generate a session secret, for example:
+```text
+ADMIN_USERNAME
+ADMIN_PASSWORD_HASH
+SESSION_SECRET
+ALLOWED_ORIGINS
+SUPABASE_URL
+SUPABASE_SERVICE_ROLE_KEY
+```
 
-   ```bash
-   openssl rand -base64 48
-   ```
+Generate the bcrypt hash without putting the password in shell history:
 
-5. Install the Netlify CLI once if needed, then start the frontend and functions together:
+```bash
+npm run auth:hash
+```
 
-   ```bash
-   npm install -g netlify-cli
-   npm run dev:full
-   ```
+Copy the complete single-quoted output line into `.env`. The quotes preserve the `$` characters in the bcrypt hash. Do not add backslashes before `$`.
 
-   Use the local URL printed by Netlify. Plain `npm run dev` starts only the public Vite frontend; authentication endpoints require `npm run dev:full`.
+Generate a session secret containing at least 32 characters:
 
-## Routes
+```bash
+openssl rand -base64 48
+```
 
-- `/` — public document center
-- `/admin/login` — administrator sign-in
-- `/admin` — protected dashboard
-- `/admin/documents` — protected document list
+Check the local credential configuration without printing any secret:
 
-## Verification
+```bash
+npm run auth:diagnose
+```
+
+## 4. Run locally
+
+Install Netlify CLI once if necessary, then run the frontend and functions together:
+
+```bash
+npm install -g netlify-cli
+npx netlify dev
+```
+
+Use the full application URL printed by Netlify, normally `http://localhost:8888`. Plain `npm run dev` starts only Vite and does not provide the Netlify Functions.
+
+For local Netlify Dev, use `ALLOWED_ORIGINS=http://localhost:8888`.
+
+## 5. Verify before deployment
 
 ```bash
 npm run typecheck
@@ -65,8 +83,51 @@ npm test
 npm run build
 ```
 
-## Production configuration
+The production build command is `npm run build`; Netlify publishes `dist` and bundles functions from `netlify/functions`.
 
-In Netlify, add `ADMIN_USERNAME`, `ADMIN_PASSWORD_HASH`, `SESSION_SECRET`, and `ALLOWED_ORIGINS` under Site configuration → Environment variables. Set `ALLOWED_ORIGINS` to the final HTTPS site origin. Never create variables prefixed with `VITE_` for authentication secrets.
+## 6. Deploy to Netlify
 
-Phase 3 will connect document upload, edit, replacement, deletion, and category management. Those server functions must verify both the authenticated session and same-origin request before changing data.
+1. Import the GitHub repository into Netlify.
+2. Confirm the build command is `npm run build` and publish directory is `dist`.
+3. Under **Site configuration → Environment variables**, add all six required variables listed above.
+4. Keep `ADMIN_PASSWORD_HASH`, `SESSION_SECRET`, and `SUPABASE_SERVICE_ROLE_KEY` server-only. Never create `VITE_` versions of them.
+5. Deploy once to obtain the final Netlify site URL.
+6. Change production `ALLOWED_ORIGINS` to that exact HTTPS origin, with no path or trailing slash—for example, the real `https://your-site.netlify.app` origin assigned by Netlify.
+7. Trigger a new deployment after updating the origin.
+
+If a custom domain is added later, include each permitted exact HTTPS origin as a comma-separated value, then redeploy. Do not hardcode either origin in source code.
+
+## Routes
+
+- `/` — public document center
+- `/admin/login` — administrator sign-in
+- `/admin` — protected dashboard
+- `/admin/documents` — protected document management
+- `/admin/categories` — protected category management
+
+`netlify.toml` sends API routes to their Netlify Functions before the final SPA fallback. Direct refreshes of valid React routes therefore return `index.html` and React Router restores the route.
+
+## Authentication and security
+
+- One administrator; no registration, profiles, email authentication, or roles.
+- Password verification uses bcrypt on the server.
+- Login creates a signed, approximately eight-hour `HttpOnly`, `SameSite=Strict` session cookie (`Secure` in production).
+- Login and mutations require an allowed same-origin request.
+- Failed logins are rate-limited per client address in each warm function instance.
+- React never receives the password hash, session secret, or Supabase service-role key.
+- Admin mutation functions verify both the signed session and request origin.
+- Public metadata contains published documents only.
+- PDF uploads and replacements are limited to 15 MB and validated by MIME type and PDF signature.
+- Category deletion is rejected while documents still reference the category.
+
+## Production verification checklist
+
+After the final deployment:
+
+1. Open `/` and confirm categories, search, counts, and a published PDF.
+2. Refresh `/admin/login`, `/admin`, `/admin/documents`, and `/admin/categories` directly.
+3. Confirm signed-out admin routes redirect to `/admin/login`.
+4. Sign in, upload a PDF, edit it, publish/unpublish it, replace it, and delete a test document.
+5. Create, edit, reorder, and delete an empty test category; confirm an occupied category cannot be deleted.
+6. Log out and confirm protected routes require login again.
+7. Confirm an unpublished document is absent from the public library.

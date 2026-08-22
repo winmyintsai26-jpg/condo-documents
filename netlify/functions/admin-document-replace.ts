@@ -13,7 +13,7 @@ export default async (request: Request) => {
   const path = storagePath(file.name); const uploaded = await db.storage.from(DOCUMENT_BUCKET).upload(path, await file.arrayBuffer(), { contentType: "application/pdf" });
   if (uploaded.error) return json({ message: "The PDF could not be uploaded." }, 500);
   const { error } = await db.from("documents").update({ storage_path: path, file_name: file.name, file_size: file.size, file_type: "PDF" }).eq("id", id);
-  if (error) { await db.storage.from(DOCUMENT_BUCKET).remove([path]); return json({ message: error.message }, 400); }
+  if (error) { console.error("Document replacement failed", error.code); await db.storage.from(DOCUMENT_BUCKET).remove([path]); return json({ message: "The PDF could not be replaced." }, 400); }
   const removed = await db.storage.from(DOCUMENT_BUCKET).remove([old.storage_path]); if (removed.error) console.error("Orphaned replaced file", old.storage_path, removed.error);
   return json({ ok: true });
 };
