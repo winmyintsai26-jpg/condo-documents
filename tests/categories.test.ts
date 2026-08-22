@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { categoryDeletionError, categoryInput, categoryUpdate, toCategory } from "../netlify/functions/_shared/categories";
 import categoriesHandler from "../netlify/functions/admin-categories";
+import categoryHandler from "../netlify/functions/admin-category";
 
 test("normalizes Supabase category rows for the admin and upload clients", () => {
   const category = toCategory({ id: "category-1", name: "Meeting Minutes", slug: "minutes", short_name: "Meetings", description: "Board records", position: 30 });
@@ -11,3 +12,4 @@ test("validates category creation fields", () => { assert.deepEqual(categoryInpu
 test("maps editable category fields including ordering", () => { assert.deepEqual(categoryUpdate({ name: "Renamed", shortName: "Short", description: "Updated", position: 20 }), { name: "Renamed", short_name: "Short", description: "Updated", position: 20 }); });
 test("allows empty category deletion and rejects categories with documents", () => { assert.equal(categoryDeletionError(0), null); assert.equal(categoryDeletionError(2), "Move or delete this category’s documents first."); });
 test("category list rejects an unauthenticated request before database access", async () => { delete process.env.SUPABASE_URL; delete process.env.SUPABASE_SERVICE_ROLE_KEY; const response = await categoriesHandler(new Request("http://localhost:8888/api/admin/categories")); assert.equal(response.status, 401); });
+test("category mutations reject an unauthenticated request before database access", async () => { delete process.env.SUPABASE_URL; delete process.env.SUPABASE_SERVICE_ROLE_KEY; const response = await categoryHandler(new Request("http://localhost:8888/api/admin/category?id=category-1", { method: "DELETE", headers: { origin: "http://localhost:8888" } })); assert.equal(response.status, 401); });

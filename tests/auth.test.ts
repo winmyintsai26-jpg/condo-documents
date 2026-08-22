@@ -34,10 +34,12 @@ test("valid login creates a session that survives a new request", async () => {
   assert.deepEqual(await sessionResponse.json(), { authenticated: true });
 });
 
-test("logout clears the session cookie", async () => {
+test("logout clears the session and subsequent requests are unauthenticated", async () => {
   const response = await logout(new Request(`${origin}/api/auth/logout`, { method: "POST", headers: { origin } }));
   assert.equal(response.status, 200);
   assert.match(response.headers.get("set-cookie") ?? "", /Max-Age=0/);
+  const sessionResponse = await session(new Request(`${origin}/api/auth/session`));
+  assert.deepEqual(await sessionResponse.json(), { authenticated: false });
 });
 
 test("cross-origin login is rejected", async () => {

@@ -7,7 +7,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<Status>("checking");
   useEffect(() => { let active = true; void api("/api/auth/session").then(data => { if (active) setStatus(data.authenticated ? "authenticated" : "unauthenticated"); }, () => { if (active) setStatus("unauthenticated"); }); return () => { active = false; }; }, []);
   const login = useCallback(async (username: string, password: string) => { await api("/api/auth/login", { method: "POST", body: JSON.stringify({ username, password }) }); setStatus("authenticated"); }, []);
-  const logout = useCallback(async () => { try { await api("/api/auth/logout", { method: "POST", body: "{}" }); } finally { setStatus("unauthenticated"); } }, []);
+  const logout = useCallback(async () => { await api("/api/auth/logout", { method: "POST", body: "{}" }); setStatus("unauthenticated"); }, []);
   const value = useMemo(() => ({ status, login, logout }), [status, login, logout]); return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 // eslint-disable-next-line react-refresh/only-export-components
