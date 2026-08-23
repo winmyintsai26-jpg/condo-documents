@@ -12,6 +12,6 @@ export default async (request: Request) => {
       db.from("documents").select(DOCUMENT_SELECT).eq("published", true).order("updated_at", { ascending: false }),
     ]);
     if (categoryError || documentError) throw categoryError ?? documentError;
-    return json({ categories: (categories ?? []).map(row => toCategory(row as CategoryRow)), documents: (rows ?? []).map(row => toDocument(row)) }, 200, { "cache-control": "public, max-age=60" });
+    return json({ categories: (categories ?? []).map(row => toCategory(row as CategoryRow)), documents: (rows ?? []).map(row => toDocument(row)) });
   } catch (error) { console.error("Public library error", error); return json({ message: "The document library is temporarily unavailable." }, 503); }
 };

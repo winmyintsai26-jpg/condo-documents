@@ -46,6 +46,7 @@ test("public library requests published documents only", async () => {
   try {
     const response = await publicLibrary(new Request("http://localhost:8888/api/library"));
     assert.equal(response.status, 200);
+    assert.equal(response.headers.get("cache-control"), "no-store");
     const body = await response.json();
     assert.equal(body.documents.length, 1);
     assert.equal(body.documents[0].published, true);
@@ -59,4 +60,11 @@ test("frontend source does not reference server secrets", async () => {
   const files = ["src/api/documents.ts", "src/auth/AuthContext.tsx", "src/config/site.ts"];
   const source = (await Promise.all(files.map(file => readFile(file, "utf8")))).join("\n");
   assert.doesNotMatch(source, /SUPABASE_SERVICE_ROLE_KEY|ADMIN_PASSWORD_HASH|SESSION_SECRET/);
+});
+
+test("admin document mutations update local state without refetching the full list", async () => {
+  const source = await readFile("src/pages/AdminDocumentsPage.tsx", "utf8");
+  assert.match(source, /setDocuments\(current => putFirst\(current, document\)\)/);
+  assert.match(source, /setDocuments\(current => current\.filter\(entry => entry\.id !== item\.id\)\)/);
+  assert.doesNotMatch(source, /await load\(\)/);
 });

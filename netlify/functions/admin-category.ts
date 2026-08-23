@@ -1,6 +1,6 @@
 import { json, requireAdminMutation } from "./_shared/auth";
 import { getSupabase } from "./_shared/supabase";
-import { categoryDeletionError, categoryUpdate } from "./_shared/categories";
+import { categoryDeletionError, categoryUpdate, toCategory, type CategoryRow } from "./_shared/categories";
 
 export default async (request: Request) => {
   if (!["PATCH", "DELETE"].includes(request.method)) return json({ message: "Method not allowed." }, 405);
@@ -15,5 +15,7 @@ export default async (request: Request) => {
   }
   const input = await request.json() as Record<string, unknown>; const update = categoryUpdate(input);
   if (!Object.keys(update).length) return json({ message: "No valid category changes were provided." }, 400);
-  const { error } = await db.from("categories").update(update).eq("id", id); if (error) { console.error("Category update failed", error.code); return json({ message: "Category could not be updated." }, 400); } return json({ ok: true });
+  const { data, error } = await db.from("categories").update(update).eq("id", id).select("id,name,slug,short_name,description,position").single();
+  if (error) { console.error("Category update failed", error.code); return json({ message: "Category could not be updated." }, 400); }
+  return json({ category: toCategory(data as CategoryRow) });
 };

@@ -1,4 +1,5 @@
 import { json, requireAdminMutation } from "./_shared/auth";
+import { DOCUMENT_SELECT, toDocument } from "./_shared/documents";
 import { DOCUMENT_BUCKET, getSupabase } from "./_shared/supabase";
 
 export default async (request: Request) => {
@@ -12,11 +13,12 @@ export default async (request: Request) => {
     if (typeof input.categoryId === "string") update.category_id = input.categoryId;
     if (Number.isInteger(input.year) && Number(input.year) >= 1800 && Number(input.year) <= 2200) update.year = input.year;
     if (typeof input.published === "boolean") update.published = input.published;
-    const { error } = await db.from("documents").update(update).eq("id", id); if (error) { console.error("Document update failed", error.code); return json({ message: "The document could not be updated." }, 400); } return json({ ok: true });
+    const { data, error } = await db.from("documents").update(update).eq("id", id).select(DOCUMENT_SELECT).single();
+    if (error) { console.error("Document update failed", error.code); return json({ message: "The document could not be updated." }, 400); }
+    return json({ document: toDocument(data) });
   }
-  const { data, error: lookupError } = await db.from("documents").select("storage_path").eq("id", id).single();
-  if (lookupError) return json({ message: "Document not found." }, 404);
-  const { error } = await db.from("documents").delete().eq("id", id); if (error) { console.error("Document deletion failed", error.code); return json({ message: "The document could not be deleted." }, 400); }
+  const { data, error } = await db.from("documents").delete().eq("id", id).select("storage_path").single();
+  if (error) { console.error("Document deletion failed", error.code); return json({ message: error.code === "PGRST116" ? "Document not found." : "The document could not be deleted." }, error.code === "PGRST116" ? 404 : 400); }
   const removed = await db.storage.from(DOCUMENT_BUCKET).remove([data.storage_path]);
   if (removed.error) console.error("Orphaned document file", data.storage_path, removed.error);
   return json({ ok: true });
