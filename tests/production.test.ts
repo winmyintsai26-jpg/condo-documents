@@ -3,6 +3,7 @@ import { access, readFile } from "node:fs/promises";
 import { createServer } from "node:http";
 import test from "node:test";
 import publicLibrary from "../netlify/functions/public-library";
+import { createOwnerSessionToken, OWNER_SESSION_COOKIE } from "../netlify/functions/_shared/auth";
 
 test("migration grants only the server service role application-table access", async () => {
   const migration = await readFile("supabase/migrations/202608220001_document_management.sql", "utf8");
@@ -26,7 +27,23 @@ test("Netlify routes functions before the SPA fallback", async () => {
   await assert.rejects(() => access("public/_redirects"));
 });
 
-test("public library requests published documents only", async () => {
+test("root route enters the protected owner flow", async () => {
+  const source = await readFile("src/App.tsx", "utf8");
+  assert.match(source, /path="\/" element={<Navigate to="\/owner" replace \/>}/);
+  assert.match(source, /<Route element={<OwnerProtectedRoute \/>}><Route path="\/owner"/);
+  assert.doesNotMatch(source, /path="\/" element={<HomePage/);
+});
+
+test("legacy library rejects unauthenticated requests before database access", async () => {
+  delete process.env.SUPABASE_URL;
+  delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+  process.env.SESSION_SECRET = "test-session-secret-that-is-longer-than-thirty-two-characters";
+  const response = await publicLibrary(new Request("http://localhost:8888/api/library"));
+  assert.equal(response.status, 401);
+  assert.deepEqual(await response.json(), { message: "Authentication required." });
+});
+
+test("authenticated legacy library remains published-only", async () => {
   let documentQuery = "";
   const server = createServer((request, response) => {
     const url = new URL(request.url ?? "/", "http://localhost");
@@ -46,8 +63,10 @@ test("public library requests published documents only", async () => {
   const address = server.address(); if (!address || typeof address === "string") throw new Error("Mock server did not start");
   process.env.SUPABASE_URL = `http://127.0.0.1:${address.port}`;
   process.env.SUPABASE_SERVICE_ROLE_KEY = "test-only-service-role-key";
+  process.env.SESSION_SECRET = "test-session-secret-that-is-longer-than-thirty-two-characters";
+  const ownerToken = await createOwnerSessionToken();
   try {
-    const response = await publicLibrary(new Request("http://localhost:8888/api/library"));
+    const response = await publicLibrary(new Request("http://localhost:8888/api/library", { headers: { cookie: `${OWNER_SESSION_COOKIE}=${ownerToken}` } }));
     assert.equal(response.status, 200);
     assert.equal(response.headers.get("cache-control"), "no-store");
     const body = await response.json();

@@ -1,6 +1,6 @@
 # Condo Documents
 
-A production-ready condominium document portal with a public library, a secure single-administrator area, and a read-only shared-owner portal. The frontend is a React/Vite SPA. Authentication, document management, and Supabase access run only in Netlify Functions.
+A production-ready condominium document portal with a secure single-administrator area and a read-only shared-owner portal. The frontend is a React/Vite SPA. Authentication, document management, and Supabase access run only in Netlify Functions.
 
 ## Requirements
 
@@ -103,7 +103,7 @@ If a custom domain is added later, include each permitted exact HTTPS origin as 
 
 ## Routes
 
-- `/` — public document center
+- `/` — redirects into the protected owner flow
 - `/admin/login` — administrator sign-in
 - `/admin` — protected dashboard
 - `/admin/documents` — protected document management
@@ -124,7 +124,7 @@ If a custom domain is added later, include each permitted exact HTTPS origin as 
 - Admin mutation functions verify both the signed session and request origin.
 - Admin and owner sessions use separate cookies, exact JWT roles, and distinct subjects. Owner sessions cannot authorize admin APIs.
 - The owner library API requires an owner session and returns published documents only.
-- Public metadata contains published documents only.
+- Document metadata endpoints require an owner session and return published documents only.
 - PDF uploads and replacements are limited to 15 MB and validated by MIME type and PDF signature.
 - Category deletion is rejected while documents still reference the category.
 
@@ -134,7 +134,7 @@ The Supabase `documents` bucket remains public. The owner portal itself is authe
 
 After the final deployment:
 
-1. Open `/` and confirm categories, search, counts, and a published PDF.
+1. Open `/` and confirm it redirects to `/owner/login` while signed out.
 2. Refresh `/admin/login`, `/admin`, `/admin/documents`, and `/admin/categories` directly.
 3. Confirm signed-out admin routes redirect to `/admin/login`.
 4. Sign in, upload a PDF, edit it, publish/unpublish it, replace it, and delete a test document.

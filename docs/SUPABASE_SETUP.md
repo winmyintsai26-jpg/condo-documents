@@ -10,7 +10,7 @@
 
 The migration explicitly grants schema usage and table `select`, `insert`, `update`, and `delete` privileges to `service_role`. This is required for projects created with automatic table exposure disabled. No undocumented manual grant step should be necessary.
 
-RLS remains enabled on both application tables and no browser table policies are created. The service-role key is used only by authenticated Netlify Functions. Public users receive published metadata through `/api/library`; they never query the tables directly.
+RLS remains enabled on both application tables and no browser table policies are created. The service-role key is used only by authenticated Netlify Functions. Document metadata is returned only after owner-session validation; browsers never query the tables directly.
 
 The storage bucket is public so published PDF links can open directly. Its only browser policy is select access for objects in the `documents` bucket. Upload, replacement, and deletion use the server-side service role after authentication and same-origin checks.
 
