@@ -1,6 +1,6 @@
-import { Eye, EyeOff, LockKeyhole } from "lucide-react";
+import { Eye, EyeOff, LockKeyhole, ShieldUser } from "lucide-react";
 import { useState, type FormEvent } from "react";
-import { Navigate, useLocation, useNavigate } from "react-router-dom";
+import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useOwnerAuth } from "../auth/OwnerAuthContext";
 import { PropertyMark } from "../components/PropertyMark";
 import { siteConfig } from "../config/site";
@@ -26,7 +26,7 @@ export function OwnerLoginPage() {
       setError(reason instanceof Error ? reason.message : "Unable to sign in.");
     } finally { setSubmitting(false); }
   };
-  return <main className="login-page"><section className="login-panel">
+  return <main className="login-page"><Link className="owner-admin-link" to="/admin/login"><ShieldUser size={17} aria-hidden="true" />Admin</Link><section className="login-panel">
     <div className="login-brand"><PropertyMark /><span>{siteConfig.propertyName}</span></div>
     <span className="admin-icon"><LockKeyhole size={27} /></span>
     <p className="eyebrow">Owner document portal</p><h1>Owner sign in</h1>

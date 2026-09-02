@@ -34,6 +34,13 @@ test("root route enters the protected owner flow", async () => {
   assert.doesNotMatch(source, /path="\/" element={<HomePage/);
 });
 
+test("owner login provides a separate admin login link", async () => {
+  const source = await readFile("src/pages/OwnerLoginPage.tsx", "utf8");
+  assert.match(source, /to="\/admin\/login"/);
+  assert.match(source, /owner-admin-link/);
+  assert.match(source, />Admin<\/Link>/);
+});
+
 test("legacy library rejects unauthenticated requests before database access", async () => {
   delete process.env.SUPABASE_URL;
   delete process.env.SUPABASE_SERVICE_ROLE_KEY;
