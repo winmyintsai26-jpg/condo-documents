@@ -12,6 +12,11 @@ export const getLibrary = async () => {
   if (!Array.isArray(result.categories) || !Array.isArray(result.documents)) throw new Error("The document library returned an invalid response.");
   return result as LibraryResponse;
 };
+export const getOwnerLibrary = async () => {
+  const result = await api<{ categories?: unknown; documents?: unknown }>("/api/owner/library", { cache: "no-store" });
+  if (!Array.isArray(result.categories) || !Array.isArray(result.documents)) throw new Error("The owner library returned an invalid response.");
+  return result as LibraryResponse;
+};
 export const getAdminDocuments = () => api<{documents: CondoDocument[]}>("/api/admin/documents");
 export const getAdminCategories = async () => { const result = await api<{categories?: unknown}>("/api/admin/categories"); if (!Array.isArray(result.categories)) throw new Error("The category service returned an invalid response."); return { categories: result.categories as CategoryDefinition[] }; };
 export const createDocument = (form: FormData) => api<{document: CondoDocument}>("/api/admin/documents", { method: "POST", body: form });

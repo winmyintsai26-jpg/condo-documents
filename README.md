@@ -1,6 +1,6 @@
 # Condo Documents
 
-A production-ready condominium document portal with a public library and a secure single-administrator area. The frontend is a React/Vite SPA. Authentication, document management, and Supabase access run only in Netlify Functions.
+A production-ready condominium document portal with a public library, a secure single-administrator area, and a read-only shared-owner portal. The frontend is a React/Vite SPA. Authentication, document management, and Supabase access run only in Netlify Functions.
 
 ## Requirements
 
@@ -35,19 +35,22 @@ Required variables:
 ```text
 ADMIN_USERNAME
 ADMIN_PASSWORD_HASH
+OWNER_USERNAME
+OWNER_PASSWORD_HASH
 SESSION_SECRET
 ALLOWED_ORIGINS
 SUPABASE_URL
 SUPABASE_SERVICE_ROLE_KEY
 ```
 
-Generate the bcrypt hash without putting the password in shell history:
+Generate each bcrypt hash without putting the password in shell history:
 
 ```bash
 npm run auth:hash
+npm run auth:hash -- --owner
 ```
 
-Copy the complete single-quoted output line into `.env`. The quotes preserve the `$` characters in the bcrypt hash. Do not add backslashes before `$`.
+Copy both complete single-quoted output lines into `.env`. Each password must contain at least 12 characters. The quotes preserve the `$` characters in the bcrypt hashes. Do not add backslashes before `$`.
 
 Generate a session secret containing at least 32 characters:
 
@@ -59,6 +62,7 @@ Check the local credential configuration without printing any secret:
 
 ```bash
 npm run auth:diagnose
+npm run auth:diagnose -- --owner
 ```
 
 ## 4. Run locally
@@ -89,8 +93,8 @@ The production build command is `npm run build`; Netlify publishes `dist` and bu
 
 1. Import the GitHub repository into Netlify.
 2. Confirm the build command is `npm run build` and publish directory is `dist`.
-3. Under **Site configuration → Environment variables**, add all six required variables listed above.
-4. Keep `ADMIN_PASSWORD_HASH`, `SESSION_SECRET`, and `SUPABASE_SERVICE_ROLE_KEY` server-only. Never create `VITE_` versions of them.
+3. Under **Site configuration → Environment variables**, add all eight required variables listed above.
+4. Keep both password hashes, `SESSION_SECRET`, and `SUPABASE_SERVICE_ROLE_KEY` server-only. Never create `VITE_` versions of them.
 5. Deploy once to obtain the final Netlify site URL.
 6. Change production `ALLOWED_ORIGINS` to that exact HTTPS origin, with no path or trailing slash—for example, the real `https://your-site.netlify.app` origin assigned by Netlify.
 7. Trigger a new deployment after updating the origin.
@@ -104,21 +108,27 @@ If a custom domain is added later, include each permitted exact HTTPS origin as 
 - `/admin` — protected dashboard
 - `/admin/documents` — protected document management
 - `/admin/categories` — protected category management
+- `/owner/login` — shared owner sign-in
+- `/owner` — protected read-only owner document library
 
 `netlify.toml` sends API routes to their Netlify Functions before the final SPA fallback. Direct refreshes of valid React routes therefore return `index.html` and React Router restores the route.
 
 ## Authentication and security
 
-- One administrator; no registration, profiles, email authentication, or roles.
+- One administrator and one shared owner credential; no registration, profiles, email authentication, invitations, or individual owner accounts.
 - Password verification uses bcrypt on the server.
 - Login creates a signed, approximately eight-hour `HttpOnly`, `SameSite=Strict` session cookie (`Secure` in production).
 - Login and mutations require an allowed same-origin request.
 - Failed logins are rate-limited per client address in each warm function instance.
 - React never receives the password hash, session secret, or Supabase service-role key.
 - Admin mutation functions verify both the signed session and request origin.
+- Admin and owner sessions use separate cookies, exact JWT roles, and distinct subjects. Owner sessions cannot authorize admin APIs.
+- The owner library API requires an owner session and returns published documents only.
 - Public metadata contains published documents only.
 - PDF uploads and replacements are limited to 15 MB and validated by MIME type and PDF signature.
 - Category deletion is rejected while documents still reference the category.
+
+The Supabase `documents` bucket remains public. The owner portal itself is authenticated, but direct Supabase PDF URLs are not confidential while that bucket remains public.
 
 ## Production verification checklist
 

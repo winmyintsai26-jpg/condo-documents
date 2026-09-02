@@ -20,6 +20,9 @@ test("Netlify routes functions before the SPA fallback", async () => {
   assert.match(config, /command = "npm run build"/);
   assert.match(config, /publish = "dist"/);
   assert.match(config, /functions = "netlify\/functions"/);
+  for (const route of ["/api/auth/owner/login", "/api/auth/owner/session", "/api/auth/owner/logout", "/api/owner/library"]) {
+    assert.ok(config.indexOf(`from = "${route}"`) > apiRedirect && config.indexOf(`from = "${route}"`) < spaFallback);
+  }
   await assert.rejects(() => access("public/_redirects"));
 });
 
@@ -57,9 +60,9 @@ test("public library requests published documents only", async () => {
 });
 
 test("frontend source does not reference server secrets", async () => {
-  const files = ["src/api/documents.ts", "src/auth/AuthContext.tsx", "src/config/site.ts"];
+  const files = ["src/api/documents.ts", "src/auth/AuthContext.tsx", "src/auth/OwnerAuthContext.tsx", "src/config/site.ts", "src/pages/OwnerLoginPage.tsx", "src/pages/OwnerLibraryPage.tsx"];
   const source = (await Promise.all(files.map(file => readFile(file, "utf8")))).join("\n");
-  assert.doesNotMatch(source, /SUPABASE_SERVICE_ROLE_KEY|ADMIN_PASSWORD_HASH|SESSION_SECRET/);
+  assert.doesNotMatch(source, /SUPABASE_SERVICE_ROLE_KEY|ADMIN_PASSWORD_HASH|ADMIN_USERNAME|OWNER_PASSWORD_HASH|OWNER_USERNAME|SESSION_SECRET/);
 });
 
 test("admin document mutations update local state without refetching the full list", async () => {

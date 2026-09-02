@@ -30,6 +30,26 @@
   status = 200
 
 [[redirects]]
+  from = "/api/auth/owner/login"
+  to = "/.netlify/functions/auth-owner-login"
+  status = 200
+
+[[redirects]]
+  from = "/api/auth/owner/session"
+  to = "/.netlify/functions/auth-owner-session"
+  status = 200
+
+[[redirects]]
+  from = "/api/auth/owner/logout"
+  to = "/.netlify/functions/auth-owner-logout"
+  status = 200
+
+[[redirects]]
+  from = "/api/owner/library"
+  to = "/.netlify/functions/owner-library"
+  status = 200
+
+[[redirects]]
   from = "/api/library"
   to = "/.netlify/functions/public-library"
   status = 200
