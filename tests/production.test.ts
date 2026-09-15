@@ -41,6 +41,18 @@ test("owner login provides a separate admin login link", async () => {
   assert.match(source, />Admin<\/Link>/);
 });
 
+test("both login pages use the local Hamilton Court photo", async () => {
+  const pages = await Promise.all([
+    readFile("src/pages/OwnerLoginPage.tsx", "utf8"),
+    readFile("src/pages/AdminLoginPage.tsx", "utf8"),
+  ]);
+  for (const source of pages) {
+    assert.match(source, /src="\/images\/hamilton-court\.jpg"/);
+    assert.match(source, /alt="Hamilton Court Condominiums"/);
+  }
+  await access("public/images/hamilton-court.jpg");
+});
+
 test("legacy library rejects unauthenticated requests before database access", async () => {
   delete process.env.SUPABASE_URL;
   delete process.env.SUPABASE_SERVICE_ROLE_KEY;

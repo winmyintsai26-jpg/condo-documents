@@ -37,5 +37,5 @@ export function OwnerLoginPage() {
       {error && <p className="login-error" role="alert">{error}</p>}
       <button className="primary-button" type="submit" disabled={submitting || status === "checking"}>{submitting ? "Signing in…" : "Sign In"}</button>
     </form>
-  </section><aside className="login-accent" aria-hidden="true"><div><span>Owner document access</span><strong>Community records.<br />Ready when needed.</strong></div></aside></main>;
+  </section><aside className="login-accent"><img className="login-accent-photo" src="/images/hamilton-court.jpg" alt="Hamilton Court Condominiums" /><div><span>Owner document access</span><strong>Community records.<br />Ready when needed.</strong></div></aside></main>;
 }
