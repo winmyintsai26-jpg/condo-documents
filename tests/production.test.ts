@@ -53,12 +53,12 @@ test("both login pages use the local Hamilton Court illustration", async () => {
   await access("public/images/hamilton-court-illustration.png");
 });
 
-test("mobile login layouts keep the property image visible without cropping", async () => {
+test("mobile login layouts show the full property image above the form", async () => {
   const css = await readFile("src/styles/global.css", "utf8");
   const mobile = css.split("@media(max-width:800px)")[1]?.split("\n")[0];
   assert.ok(mobile, "Mobile login styles must exist");
-  assert.match(mobile, /\.login-page\{display:block\}/);
-  assert.match(mobile, /\.login-accent\{display:grid;padding:24px 16px\}/);
+  assert.match(mobile, /\.login-page\{display:flex;flex-direction:column\}/);
+  assert.match(mobile, /\.login-accent\{display:grid;order:-1;padding:24px 16px\}/);
   assert.match(mobile, /\.login-accent-photo\{max-width:560px;max-height:none\}/);
   assert.doesNotMatch(css, /\.login-accent\{display:none\}/);
   assert.match(css, /height:auto;object-fit:contain/);
