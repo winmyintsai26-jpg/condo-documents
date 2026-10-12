@@ -58,8 +58,8 @@ test("mobile login layouts show the full property image above the form", async (
   const mobile = css.split("@media(max-width:800px)")[1]?.split("\n")[0];
   assert.ok(mobile, "Mobile login styles must exist");
   assert.match(mobile, /\.login-page\{display:flex;flex-direction:column\}/);
-  assert.match(mobile, /\.login-accent\{display:grid;order:-1;padding:24px 16px\}/);
-  assert.match(mobile, /\.login-accent-photo\{max-width:560px;max-height:none\}/);
+  assert.match(mobile, /\.login-accent\{display:grid;order:-1;padding:16px 8px\}/);
+  assert.match(mobile, /\.login-accent-photo\{max-width:720px;max-height:none\}/);
   assert.doesNotMatch(css, /\.login-accent\{display:none\}/);
   assert.match(css, /height:auto;object-fit:contain/);
 });
