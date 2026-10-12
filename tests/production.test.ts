@@ -41,16 +41,27 @@ test("owner login provides a separate admin login link", async () => {
   assert.match(source, />Admin<\/Link>/);
 });
 
-test("both login pages use the local Hamilton Court photo", async () => {
+test("both login pages use the local Hamilton Court illustration", async () => {
   const pages = await Promise.all([
     readFile("src/pages/OwnerLoginPage.tsx", "utf8"),
     readFile("src/pages/AdminLoginPage.tsx", "utf8"),
   ]);
   for (const source of pages) {
-    assert.match(source, /src="\/images\/hamilton-court\.jpg"/);
-    assert.match(source, /alt="Hamilton Court Condominiums"/);
+    assert.match(source, /src="\/images\/hamilton-court-illustration\.png"/);
+    assert.match(source, /alt="Illustration of Hamilton Court Condominiums"/);
   }
-  await access("public/images/hamilton-court.jpg");
+  await access("public/images/hamilton-court-illustration.png");
+});
+
+test("mobile login layouts keep the property image visible without cropping", async () => {
+  const css = await readFile("src/styles/global.css", "utf8");
+  const mobile = css.split("@media(max-width:800px)")[1]?.split("\n")[0];
+  assert.ok(mobile, "Mobile login styles must exist");
+  assert.match(mobile, /\.login-page\{display:block\}/);
+  assert.match(mobile, /\.login-accent\{display:grid;padding:24px 16px\}/);
+  assert.match(mobile, /\.login-accent-photo\{max-width:560px;max-height:none\}/);
+  assert.doesNotMatch(css, /\.login-accent\{display:none\}/);
+  assert.match(css, /height:auto;object-fit:contain/);
 });
 
 test("legacy library rejects unauthenticated requests before database access", async () => {
