@@ -3,6 +3,7 @@ import { useState, type FormEvent } from "react";
 import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useOwnerAuth } from "../auth/OwnerAuthContext";
 import { PropertyMark } from "../components/PropertyMark";
+import { LoginPropertyImage } from "../components/LoginPropertyImage";
 import { siteConfig } from "../config/site";
 
 export function OwnerLoginPage() {
@@ -37,5 +38,5 @@ export function OwnerLoginPage() {
       {error && <p className="login-error" role="alert">{error}</p>}
       <button className="primary-button" type="submit" disabled={submitting || status === "checking"}>{submitting ? "Signing in…" : "Sign In"}</button>
     </form>
-  </section><aside className="login-accent"><img className="login-accent-photo" src="/images/hamilton-court-illustration.png" alt="Illustration of Hamilton Court Condominiums" /></aside></main>;
+  </section><aside className="login-accent"><LoginPropertyImage /></aside></main>;
 }

@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { access, readFile } from "node:fs/promises";
+import { access, readFile, stat } from "node:fs/promises";
 import { createServer } from "node:http";
 import test from "node:test";
 import publicLibrary from "../netlify/functions/public-library";
@@ -41,16 +41,29 @@ test("owner login provides a separate admin login link", async () => {
   assert.match(source, />Admin<\/Link>/);
 });
 
-test("both login pages use the local Hamilton Court illustration", async () => {
+test("both login pages use the shared responsive Hamilton Court illustration", async () => {
   const pages = await Promise.all([
     readFile("src/pages/OwnerLoginPage.tsx", "utf8"),
     readFile("src/pages/AdminLoginPage.tsx", "utf8"),
   ]);
   for (const source of pages) {
-    assert.match(source, /src="\/images\/hamilton-court-illustration\.png"/);
-    assert.match(source, /alt="Illustration of Hamilton Court Condominiums"/);
+    assert.match(source, /<LoginPropertyImage \/>/);
+    assert.doesNotMatch(source, /hamilton-court-illustration\.png/);
   }
-  await access("public/images/hamilton-court-illustration.png");
+  const image = await readFile("src/components/LoginPropertyImage.tsx", "utf8");
+  assert.match(image, /alt="Illustration of Hamilton Court Condominiums"/);
+  assert.ok(image.includes("width={2048}"));
+  assert.ok(image.includes("height={1184}"));
+  assert.match(image, /fetchPriority="high"/);
+  assert.match(image, /sizes=/);
+  const original = await stat("public/images/hamilton-court-illustration.png");
+  for (const width of [640, 1024, 2048]) {
+    assert.ok(image.includes(`/images/hamilton-court-illustration-${width}.webp ${width}w`));
+    const file = await readFile(`public/images/hamilton-court-illustration-${width}.webp`);
+    assert.equal(file.subarray(0, 4).toString(), "RIFF");
+    assert.equal(file.subarray(8, 12).toString(), "WEBP");
+    assert.ok(file.length < original.size * 0.11, "Image must remain below 11% of the original size");
+  }
 });
 
 test("mobile login layouts show the full property image above the form", async () => {
